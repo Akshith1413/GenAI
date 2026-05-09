@@ -10,27 +10,18 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-def critic_agent(document):
+def critic_agent(topic, document):
+    instruction_letter = f"""
+You are a strict senior reviewer and editor.
 
-    instruction_letter = """
-You are a strict senior Product Manager reviewing a PRD document.
-
-Evaluate the document carefully based on:
+Evaluate the following document about '{topic}' carefully based on:
 
 1. Completeness
 2. Clarity
-3. Technical depth
+3. Depth of knowledge
 4. Realism
 5. Structure
-6. Business understanding
-
-Check whether these sections exist:
-- Problem Statement
-- Goals
-- User Stories
-- Technical Requirements
-- Success Metrics
-- Risks
+6. Relevance to the topic
 
 Scoring Rules:
 - 90-100 = excellent
@@ -39,16 +30,16 @@ Scoring Rules:
 - below 50 = poor
 
 Reject if:
-- sections are missing
+- key aspects of the topic are missing
 - explanations are vague
-- technical details are weak
-- goals are unrealistic
+- arguments or details are weak
+- the structure is poor
 
 Respond EXACTLY in this format:
 
 STATUS: approved OR rejected
 SCORE: number out of 100
-MISSING: missing sections or none
+MISSING: missing aspects or none
 FEEDBACK: detailed improvement feedback
 """
 

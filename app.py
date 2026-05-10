@@ -1,12 +1,38 @@
 from flask import Flask, request, jsonify, render_template
 from writer_agent import writer_agent
 from critic_agent import critic_agent
+import os
+import threading
+import time
+import urllib.request
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/ping')
+def ping():
+    return jsonify({"status": "alive"})
+
+def ping_server():
+    """Background task to ping the server every 14 minutes to prevent Render cold starts."""
+    url = os.environ.get('RENDER_EXTERNAL_URL')
+    if not url:
+        url = 'http://localhost:5000'
+        
+    ping_url = url.rstrip('/') + '/api/ping'
+    while True:
+        time.sleep(14 * 60) # Wait 14 minutes
+        try:
+            urllib.request.urlopen(ping_url)
+            print(f"Pinged {ping_url} to keep server alive.")
+        except Exception as e:
+            print(f"Failed to ping {ping_url}: {e}")
+
+# Start the background thread
+threading.Thread(target=ping_server, daemon=True).start()
 
 @app.route('/api/generate', methods=['POST'])
 def generate():

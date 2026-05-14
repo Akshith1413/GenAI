@@ -76,11 +76,29 @@ def generate():
             
         attempt += 1
         
+    import json
+    import re
+    
+    score_match = re.search(r"(?i)score:\s*(\d+)", review)
+    score = int(score_match.group(1)) if score_match else 0
+
+    result = {
+        "status": "approved" if "status: approved" in review.lower() else "rejected",
+        "score": score
+    }
+    
+    print("\n--- JSON OUTPUT (WEB APP) ---\n")
+    print(json.dumps(result, indent=4))
+    
+    with open("output.json", "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=4)
+        
+    print("JSON file updated successfully from web app!")
+
     return jsonify({
         "success": True,
         "attempts": attempts_history,
         "final_document": document
     })
-
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

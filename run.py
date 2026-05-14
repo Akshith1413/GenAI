@@ -52,10 +52,13 @@ if attempt > max_attempts:
     print("\nReached maximum attempts.\n")
     print(document)
 
+import re
+score_match = re.search(r"(?i)score:\s*(\d+)", review)
+score = int(score_match.group(1)) if score_match else 0
+
 result = {
-    "status": "approved" if "STATUS: approved" in review else "rejected",
-    "score": 92,
-    "document": document
+    "status": "approved" if "status: approved" in review.lower() else "rejected",
+    "score": score
 }
 
 print("\n--- JSON OUTPUT ---\n")

@@ -61,7 +61,7 @@ This project was developed collaboratively by a team of 4 engineers:
 
 *   **Harsha:** 
     *   Created the foundational static configurations for the Critic and Writer agents.
-*   **Akshith (User):** 
+*   **Akshith:** 
     *   Combined both agent models into a unified, dynamic workflow.
     *   Significantly improved the accuracy of the multi-agent routing.
     *   Built and deployed the dynamic web application (`Flask`).

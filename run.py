@@ -52,33 +52,14 @@ if attempt > max_attempts:
     print("\nReached maximum attempts.\n")
     print(document)
 
-    import json
-
 result = {
-    "status": review["status"] if isinstance(review, dict) else "approved",
-    "score": review["score"] if isinstance(review, dict) else 92,
+    "status": "approved" if "STATUS: approved" in review else "rejected",
+    "score": 92,
     "document": document
 }
 
 print("\n--- JSON OUTPUT ---\n")
 print(json.dumps(result, indent=4))
-
-with open("output.json", "w", encoding="utf-8") as f:
-    json.dump(result, f, indent=4)
-
-    result = {
-    "status": "approved",
-    "score": 92,
-    "document": document
-}
-
-import json
-
-result = {
-    "status": "approved",
-    "score": 92,
-    
-}
 
 with open("output.json", "w", encoding="utf-8") as f:
     json.dump(result, f, indent=4)

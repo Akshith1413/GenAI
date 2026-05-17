@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Document Review System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 30, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-glow: rgba(100, 150, 255, 0.15);
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+            animation: bgPulse 20s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card:hover {
+            border-color: var(--glass-glow);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 0 30px var(--glass-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Header */
+        .header {
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .upload-section {
+            grid-column: 1 / -1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 320px;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+            .critique-panel {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Upload Area */
+        .upload-area {
+            padding: 48px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .upload-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        /* Content Panels */
+        .panel {
+            padding: 24px;
+            min-height: 400px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .panel-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .panel-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent-primary);
+        }
+
+        .panel-content {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .panel-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 4px;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Markdown Styling */
+        .markdown-content h1 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: var(--accent-primary);
+        }
+
+        .markdown-content h2 {
+            font-size: 1.25rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: var(--accent-secondary);
+        }
+
+        .markdown-content h3 {
+            font-size: 1rem;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .markdown-content li {
+            margin-bottom: 4px;
+        }
+
+        .markdown-content strong {
+            color: var(--accent-primary);
+        }
+
+        /* Critique Panel */
+        .critique-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 24px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .score-value.excellent { color: var(--accent-success); }
+        .score-value.good { color: var(--accent-warning); }
+        .score-value.poor { color: var(--accent-danger); }
+
+        .score-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .critique-section {
+            margin-bottom: 20px;
+        }
+
+        .critique-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .critique-list {
+            list-style: none;
+        }
+
+        .critique-list li {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--accent-warning);
+        }
+
+        .critique-list.suggestions li {
+            border-left-color: var(--accent-primary);
+        }
+
+        .critique-empty {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Revision Counter */
+        .revision-counter {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .revision-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .revision-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .revision-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+        }
+
+        .revision-dot.warning {
+            background: var(--accent-warning);
+            animation: blink 1s infinite;
+        }
+
+        .revision-dot.danger {
+            background: var(--accent-danger);
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-success), #059669);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            border-radius: 16px;
+            z-index: 10;
+        }
+
+        .loading-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--accent-warning);
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-danger);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-success);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <div class="header glass-card">
+        <h1>Agentic Document Review System</h1>
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span id="systemStatus">System Ready</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="glass-card upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Drop your document here or click to browse</div>
+                <div class="upload-hint">Supports .docx files • Max 10MB</div>
+                <input type="file" id="fileInput" class="file-input" accept=".docx">
+            </div>
+
+            <div style="text-align: center; margin: 16px 0; color: var(--text-muted); font-size: 0.875rem; display: flex; align-items: center; gap: 12px;">
+                <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+                <span>OR paste raw text below</span>
+                <div style="flex: 1; height: 1px; background: var(--glass-border);"></div>
+            </div>
+
+            <div class="glass-card" style="padding: 24px;">
+                <textarea id="rawTextInput" placeholder="Paste your messy notes, meeting transcript, or bullet points here..." style="width: 100%; min-height: 120px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 0.9rem; padding: 14px; resize: vertical; line-height: 1.6;"></textarea>
+                <button class="btn btn-primary" id="submitTextBtn" onclick="handleTextSubmit()" style="margin-top: 12px; width: 100%;">
+                    🚀 Generate Document from Text
+                </button>
+            </div>
+            
+            <div style="display: flex; gap: 16px; margin-top: 16px;">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Document Type</label>
+                    <select id="documentType" class="form-select">
+                        <option value="meeting_minutes">Meeting Minutes</option>
+                        <option value="report">Report</option>
+                        <option value="memo">Memo</option>
+                        <option value="proposal">Proposal</option>
+                        <option value="prd">Product Requirements Document (PRD)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Max Revisions</label>
+                    <select id="maxRevisions" class="form-select">
+                        <option value="2">2 (Fast)</option>
+                        <option value="3" selected>3 (Balanced)</option>
+                        <option value="4">4 (Thorough)</option>
+                        <option value="5">5 (Maximum)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent" style="display: none;">
+            <!-- Raw Notes Panel -->
+            <div class="glass-card panel">
+                <div class="panel-header">
+                    <span class="panel-title">Raw Notes / Source</span>
+                    <span class="panel-badge">Input</span>
+                </div>
+                <div class="panel-content" id="rawContent">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <div>Upload a document to see raw content</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Draft Panel -->
+            <div class="glass-card panel" style="position: relative;">
+                <div class="panel-header">
+                    <span class="panel-title">AI Draft</span>
+                    <span class="panel-badge" id="draftBadge">Processing</span>
+                </div>
+                <div class="panel-content markdown-content" id="draftContent">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🤖</div>
+                        <div>AI is drafting your document...</div>
+                    </div>
+                </div>
+                <div class="loading-overlay" id="draftLoading" style="display: none;">
+                    <div class="spinner"></div>
+                    <div class="loading-text">AI Agents are working...</div>
+                </div>
+            </div>
+
+            <!-- Critique & Actions Panel -->
+            <div class="glass-card panel critique-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Review & Approve</span>
+                    <span class="panel-badge">HITL</span>
+                </div>
+
+                <!-- Revision Counter -->
+                <div class="revision-counter" id="revisionCounter">
+                    <span class="revision-label">Revision Cycle</span>
+                    <div class="revision-value">
+                        <span class="revision-dot" id="revisionDot"></span>
+                        <span id="revisionText">0 / 3</span>
+                    </div>
+                </div>
+
+                <!-- Score Display -->
+                <div class="score-display" id="scoreDisplay" style="display: none;">
+                    <div class="score-value" id="scoreValue">--</div>
+                    <div class="score-label">Quality Score</div>
+                </div>
+
+                <!-- Max Revisions Alert -->
+                <div class="alert alert-warning" id="maxRevisionsAlert" style="display: none;">
+                    <span>⚠️</span>
+                    <span>Max revisions reached. Human intervention required.</span>
+                </div>
+
+                <!-- Critique Sections -->
+                <div id="critiqueContent" style="display: none;">
+                    <div class="critique-section">
+                        <div class="critique-section-title">Missing Elements</div>
+                        <ul class="critique-list" id="missingElements">
+                            <li class="critique-empty">No missing elements detected</li>
+                        </ul>
+                    </div>
+
+                    <div class="critique-section">
+                        <div class="critique-section-title">Suggestions</div>
+                        <ul class="critique-list suggestions" id="suggestions">
+                            <li class="critique-empty">No suggestions at this time</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons" id="actionButtons" style="display: none;">
+                    <button class="btn btn-success" id="approveBtn" onclick="submitDecision('approve')">
+                        ✓ Approve & Finalize
+                    </button>
+                    <button class="btn btn-secondary" id="reviseBtn" onclick="submitDecision('request_changes')">
+                        ↻ Request Changes
+                    </button>
+                    <button class="btn btn-danger" id="rejectBtn" onclick="submitDecision('reject')">
+                        ✕ Reject
+                    </button>
+                </div>
+
+                <!-- Processing State -->
+                <div class="empty-state" id="processingState">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 16px; color: var(--text-muted);">
+                        AI agents are reviewing...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let currentDocumentId = null;
+        let pollInterval = null;
+
+        // File Upload Handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        async function handleFileUpload(file) {
+            if (!file.name.endsWith('.docx')) {
+                alert('Please upload a .docx file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('document_type', document.getElementById('documentType').value);
+            formData.append('max_revisions', document.getElementById('maxRevisions').value);
+
+            // Show loading
+            document.getElementById('mainContent').style.display = 'grid';
+            document.getElementById('draftLoading').style.display = 'flex';
+            document.getElementById('processingState').style.display = 'flex';
+            document.getElementById('critiqueContent').style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+            document.getElementById('scoreDisplay').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Upload failed: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                currentDocumentId = data.document_id;
+
+                // Start polling for status
+                startPolling(currentDocumentId);
+
+            } catch (error) {
+                alert('Error uploading file: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        async function handleTextSubmit() {
+            const rawText = document.getElementById('rawTextInput').value.trim();
+            if (!rawText || rawText.length < 10) {
+                alert('Please enter at least 10 characters of text.');
+                return;
+            }
+
+            const docType = document.getElementById('documentType').value;
+            const maxRev = parseInt(document.getElementById('maxRevisions').value);
+
+            // Show loading
+            document.getElementById('mainContent').style.display = 'grid';
+            document.getElementById('draftLoading').style.display = 'flex';
+            document.getElementById('processingState').style.display = 'flex';
+            document.getElementById('critiqueContent').style.display = 'none';
+            document.getElementById('actionButtons').style.display = 'none';
+            document.getElementById('scoreDisplay').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/documents`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: rawText,
+                        document_type: docType,
+                        max_revisions: maxRev
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.detail || `Request failed: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                currentDocumentId = data.document_id;
+                startPolling(currentDocumentId);
+
+            } catch (error) {
+                alert('Error processing text: ' + error.message);
+                console.error(error);
+                document.getElementById('draftLoading').style.display = 'none';
+                document.getElementById('processingState').style.display = 'none';
+            }
+        }
+
+        function startPolling(documentId) {
+            if (pollInterval) clearInterval(pollInterval);
+
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`);
+                    if (!response.ok) throw new Error('Failed to fetch status');
+
+                    const status = await response.json();
+                    updateUI(status);
+
+                    // Stop polling if final state reached
+                    if (['awaiting_approval', 'approved', 'rejected', 'max_revisions_reached'].includes(status.status)) {
+                        clearInterval(pollInterval);
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 3000);
+        }
+
+        function updateUI(status) {
+            // Update raw content
+            document.getElementById('rawContent').textContent = status.raw_input || 'No content available';
+
+            // Update draft content
+            if (status.current_draft) {
+                document.getElementById('draftContent').innerHTML = markdownToHtml(status.current_draft);
+                document.getElementById('draftLoading').style.display = 'none';
+            }
+
+            // Update draft badge
+            const badge = document.getElementById('draftBadge');
+            badge.textContent = status.status === 'awaiting_approval' ? 'Ready for Review' : 
+                                status.status === 'approved' ? 'Approved' :
+                                status.status === 'max_revisions_reached' ? 'Max Revisions' : 'Processing';
+
+            // Update revision counter
+            const currentRev = status.revision_count || 0;
+            const maxRev = status.max_revisions || 3;
+            document.getElementById('revisionText').textContent = `${currentRev} / ${maxRev}`;
+            
+            const revDot = document.getElementById('revisionDot');
+            revDot.className = 'revision-dot';
+            if (currentRev >= maxRev) {
+                revDot.classList.add('danger');
+            } else if (currentRev >= maxRev - 1) {
+                revDot.classList.add('warning');
+            }
+
+            // Show max revisions alert
+            if (status.status === 'max_revisions_reached') {
+                document.getElementById('maxRevisionsAlert').style.display = 'flex';
+                document.getElementById('processingState').style.display = 'none';
+                document.getElementById('critiqueContent').style.display = 'block';
+                document.getElementById('actionButtons').style.display = 'flex';
+                document.getElementById('approveBtn').disabled = false;
+            }
+
+            // Update critique if available
+            if (status.critique) {
+                document.getElementById('processingState').style.display = 'none';
+                document.getElementById('critiqueContent').style.display = 'block';
+                document.getElementById('scoreDisplay').style.display = 'block';
+
+                // Update score
+                const score = status.critique.score || 0;
+                const scoreEl = document.getElementById('scoreValue');
+                scoreEl.textContent = score;
+                scoreEl.className = 'score-value ' + (score >= 90 ? 'excellent' : score >= 70 ? 'good' : 'poor');
+
+                // Update missing elements
+                const missingList = document.getElementById('missingElements');
+                if (status.critique.missing_elements && status.critique.missing_elements.length > 0) {
+                    missingList.innerHTML = status.critique.missing_elements.map(el => `<li>${el}</li>`).join('');
+                } else {
+                    missingList.innerHTML = '<li class="critique-empty">No missing elements detected</li>';
+                }
+
+                // Update suggestions
+                const suggestionsList = document.getElementById('suggestions');
+                if (status.critique.improvement_suggestions && status.critique.improvement_suggestions.length > 0) {
+                    suggestionsList.innerHTML = status.critique.improvement_suggestions.map(s => `<li>${s}</li>`).join('');
+                } else {
+                    suggestionsList.innerHTML = '<li class="critique-empty">No suggestions at this time</li>';
+                }
+
+                // Show action buttons if awaiting approval
+                if (status.status === 'awaiting_approval' || status.status === 'max_revisions_reached') {
+                    document.getElementById('actionButtons').style.display = 'flex';
+                }
+            }
+        }
+
+        async function submitDecision(decision) {
+            if (!currentDocumentId) return;
+
+            const feedback = decision === 'request_changes' ? 
+                prompt('What changes would you like to request?') || '' : '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/documents/${currentDocumentId}/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        document_id: currentDocumentId,
+                        decision: decision,
+                        feedback: feedback
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to submit decision');
+
+                const result = await response.json();
+                
+                if (decision === 'approve') {
+                    document.getElementById('draftBadge').textContent = 'Approved';
+                    document.getElementById('actionButtons').innerHTML = `
+                        <div class="alert alert-success">
+                            <span>✓</span>
+                            <span>Document approved and finalized!</span>
+                        </div>
+                    `;
+                } else if (decision === 'reject') {
+                    document.getElementById('draftBadge').textContent = 'Rejected';
+                    document.getElementById('actionButtons').innerHTML = `
+                        <div class="alert alert-danger">
+                            <span>✕</span>
+                            <span>Document rejected.</span>
+                        </div>
+                    `;
+                } else {
+                    // Request changes - restart polling
+                    document.getElementById('actionButtons').style.display = 'none';
+                    document.getElementById('processingState').style.display = 'flex';
+                    document.getElementById('draftBadge').textContent = 'Revising...';
+                    startPolling(currentDocumentId);
+                }
+
+            } catch (error) {
+                alert('Error submitting decision: ' + error.message);
+            }
+        }
+
+        function markdownToHtml(markdown) {
+            if (!markdown) return '';
+            
+            return markdown
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/<li>(.*)<\/li>/gim, '<ul><li>$1</li></ul>')
+                .replace(/\n/gim, '<br>');
+        }
+
+        // Health check on load
+        fetch(`${API_BASE_URL}/health`)
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(() => document.getElementById('systemStatus').textContent = 'System Ready')
+            .catch(() => document.getElementById('systemStatus').textContent = 'Server Offline');
+    </script>
+</body>
+</html>

@@ -25,6 +25,7 @@ def writer_agent(topic, input_text):
     - Zero usage of AI tells: "In conclusion", "It is crucial", "Let's dive in", "Furthermore", "Moreover", "Delve", "Tapestry".
     - Adopt an idiosyncratic, slightly imperfect human voice. Use unique analogies, occasional conversational phrases, and highly specific expert vocabulary.
     - It must absolutely score 0% on ZeroGPT, Turnitin, and all AI detectors.
+    - Format all section titles, including "References" or "Sources", strictly as Markdown headings (e.g., ## References). Never just write "References:" as plain text.
     
     Ensure the content is detailed, logical, and professionally structured with appropriate headings, while strictly enforcing this deeply natural human tone.
     """
